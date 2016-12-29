@@ -45,7 +45,7 @@ import java.lang.ref.WeakReference;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends CanvasWatchFaceService implements DataApi.DataListener,
+public class watchFace extends CanvasWatchFaceService implements DataApi.DataListener,
         GoogleApiClient.ConnectionCallbacks,GoogleApiClient.OnConnectionFailedListener{
     /**
      * Update rate in milliseconds for interactive mode. We update once a second to advance the
@@ -59,10 +59,6 @@ public class MainActivity extends CanvasWatchFaceService implements DataApi.Data
     private static final int MSG_UPDATE_TIME = 0;
 
     GoogleApiClient googleApiClient;
-    public final String Wearable_Max="MAX";
-    public final String Wearable_Min="MIN";
-    public final String Wearable_Date="DATE";
-    public final String Wearable_Icon="ICON";
 
     DataMap dataMap;
     private final Point displaySize=new Point();
@@ -103,9 +99,9 @@ public class MainActivity extends CanvasWatchFaceService implements DataApi.Data
                 dataMap = DataMapItem.fromDataItem(dataItem).getDataMap();
                 maxTemp=dataMap.getInt("MAX_TEMP");
                 minTemp=dataMap.getInt("MIN_TEMP");
-                iconAsset=dataMap.getAsset("ICON");
-                date=dataMap.getStringArray("DATE");
-                loadBitmap(iconAsset);
+                //iconAsset=dataMap.getAsset("ICON");
+                //date=dataMap.getStringArray("DATE");
+                //loadBitmap(iconAsset);
             }
         }
     }
@@ -127,15 +123,15 @@ public class MainActivity extends CanvasWatchFaceService implements DataApi.Data
     }
 
     private static class EngineHandler extends Handler {
-        private final WeakReference<MainActivity.Engine> mWeakReference;
+        private final WeakReference<watchFace.Engine> mWeakReference;
 
-        public EngineHandler(MainActivity.Engine reference) {
+        public EngineHandler(watchFace.Engine reference) {
             mWeakReference = new WeakReference<>(reference);
         }
 
         @Override
         public void handleMessage(Message msg) {
-            MainActivity.Engine engine = mWeakReference.get();
+            watchFace.Engine engine = mWeakReference.get();
             if (engine != null) {
                 switch (msg.what) {
                     case MSG_UPDATE_TIME:
@@ -173,11 +169,11 @@ public class MainActivity extends CanvasWatchFaceService implements DataApi.Data
         public void onCreate(SurfaceHolder holder) {
             super.onCreate(holder);
 
-            setWatchFaceStyle(new WatchFaceStyle.Builder(MainActivity.this)
+            setWatchFaceStyle(new WatchFaceStyle.Builder(watchFace.this)
                     .setAcceptsTapEvents(true)
                     .build());
 
-            Resources resources = MainActivity.this.getResources();
+            Resources resources = watchFace.this.getResources();
 
             mBackgroundPaint = new Paint();
             mBackgroundPaint.setColor(resources.getColor(R.color.background));
@@ -235,7 +231,7 @@ public class MainActivity extends CanvasWatchFaceService implements DataApi.Data
          */
         @Override
         public void onTapCommand(int tapType, int x, int y, long eventTime) {
-            Resources resources = MainActivity.this.getResources();
+            Resources resources = watchFace.this.getResources();
             switch (tapType) {
                 case TAP_TYPE_TOUCH:
                     // The user has started touching the screen.
@@ -279,8 +275,8 @@ public class MainActivity extends CanvasWatchFaceService implements DataApi.Data
                 rootLayout.layout(0,0,rootLayout.getMeasuredWidth(),rootLayout.getMeasuredHeight());
                 maxTempView.setText(Integer.toString(maxTemp));
                 minTempView.setText(Integer.toString(minTemp));
-                dateView.setText(date[0] + "" +date[1]);
-                iconView.setImageBitmap(weatherIcon);
+                //dateView.setText(date[0] + "" +date[1]);
+                //iconView.setImageBitmap(weatherIcon);
             }
             else
             {
@@ -314,7 +310,7 @@ public class MainActivity extends CanvasWatchFaceService implements DataApi.Data
             }
             mRegisteredTimeZoneReceiver = true;
             IntentFilter filter = new IntentFilter(Intent.ACTION_TIMEZONE_CHANGED);
-            MainActivity.this.registerReceiver(mTimeZoneReceiver, filter);
+            watchFace.this.registerReceiver(mTimeZoneReceiver, filter);
         }
 
         private void unregisterReceiver() {
@@ -322,7 +318,7 @@ public class MainActivity extends CanvasWatchFaceService implements DataApi.Data
                 return;
             }
             mRegisteredTimeZoneReceiver = false;
-            MainActivity.this.unregisterReceiver(mTimeZoneReceiver);
+            watchFace.this.unregisterReceiver(mTimeZoneReceiver);
         }
 
         /**

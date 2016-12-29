@@ -24,7 +24,7 @@ import com.firebase.jobdispatcher.JobService;
 import com.firebase.jobdispatcher.RetryStrategy;
 
 
-public class SunshineFirebaseJobService extends JobService {
+public class  SunshineFirebaseJobService extends JobService {
 
     private AsyncTask<Void, Void, Void> mFetchWeatherTask;
 

@@ -18,6 +18,8 @@ package com.example.android.sunshine.sync;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
 import android.text.format.DateUtils;
 
 import com.example.android.sunshine.data.SunshinePreferences;
@@ -25,8 +27,15 @@ import com.example.android.sunshine.data.WeatherContract;
 import com.example.android.sunshine.utilities.NetworkUtils;
 import com.example.android.sunshine.utilities.NotificationUtils;
 import com.example.android.sunshine.utilities.OpenWeatherJsonUtils;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.wearable.DataMap;
+import com.google.android.gms.wearable.PutDataMapRequest;
+import com.google.android.gms.wearable.PutDataRequest;
+import com.google.android.gms.wearable.Wearable;
 
 import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
 public class SunshineSyncTask {
 
@@ -112,5 +121,45 @@ public class SunshineSyncTask {
             /* Server probably invalid */
             e.printStackTrace();
         }
+    }
+    private void sendDataToWatch(Context context)
+    {
+        final String[] WEATHER_PROJECTION = new String[] {
+                WeatherContract.WeatherEntry.COLUMN_WEATHER_ID,
+                WeatherContract.WeatherEntry.COLUMN_MAX_TEMP,
+                WeatherContract.WeatherEntry.COLUMN_MIN_TEMP
+        };
+        final String DataPath = "/watch";
+        Uri weatherUri = WeatherContract.WeatherEntry.buildWeatherUriWithDate(System.currentTimeMillis());
+        Cursor cursor = context.getContentResolver().query(weatherUri, WEATHER_PROJECTION, null, null, null);
+        if (cursor == null)
+        {
+            return;
+        }
+        if (!cursor.moveToFirst()) {
+            cursor.close();
+            return;
+        }
+
+        // Connect Google API client
+        GoogleApiClient googleApiClient = new GoogleApiClient.Builder(context)
+                .addApi(Wearable.API)
+                .build();
+
+        // Get result of Google API Client Connection
+        ConnectionResult connectionResult = googleApiClient.blockingConnect(30, TimeUnit.SECONDS);
+        if (!connectionResult.isSuccess()) {
+            return;
+        }
+
+        PutDataMapRequest mapRequest = PutDataMapRequest.create(DataPath);
+        DataMap dataMap =  mapRequest.getDataMap();
+        int max_temp = (int) Math.round(cursor.getDouble(cursor.getColumnIndex(WeatherContract.WeatherEntry.COLUMN_MAX_TEMP)));
+        int min_temp = (int) Math.round(cursor.getDouble(cursor.getColumnIndex(WeatherContract.WeatherEntry.COLUMN_MIN_TEMP)));
+        dataMap.putInt("MAX_TEMP", max_temp);
+        dataMap.putInt("MIN_TEMP", min_temp);
+
+        PutDataRequest putDataRequest = mapRequest.asPutDataRequest();
+        Wearable.DataApi.putDataItem(googleApiClient, putDataRequest);
     }
 }
